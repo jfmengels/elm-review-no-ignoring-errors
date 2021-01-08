@@ -7,9 +7,11 @@ module NoIgnoringErrors exposing (rule)
 -}
 
 import Elm.Syntax.Expression as Expression exposing (Expression)
+import Elm.Syntax.ModuleName exposing (ModuleName)
 import Elm.Syntax.Node as Node exposing (Node)
 import Elm.Syntax.Pattern as Pattern
-import Review.Rule as Rule exposing (Error, Rule)
+import Review.ModuleNameLookupTable exposing (ModuleNameLookupTable)
+import Review.Rule as Rule exposing (ContextCreator, Error, Rule)
 
 
 {-| Reports when error details are not being used.
@@ -73,13 +75,21 @@ elm-review --template jfmengels/elm-review-no-ignoring-errors/example --rules No
 -}
 rule : Rule
 rule =
-    Rule.newModuleRuleSchema "NoIgnoringErrors" ()
+    Rule.newModuleRuleSchemaUsingContextCreator "NoIgnoringErrors" initialContext
         |> Rule.withExpressionEnterVisitor expressionVisitor
         |> Rule.fromModuleRuleSchema
 
 
 type alias Context =
-    ()
+    { lookupTable : ModuleNameLookupTable
+    }
+
+
+initialContext : Rule.ContextCreator () Context
+initialContext =
+    Rule.initContextCreator
+        (\lookupTable () -> { lookupTable = lookupTable })
+        |> Rule.withModuleNameLookupTable
 
 
 expressionVisitor : Node Expression -> Context -> ( List (Error {}), Context )
