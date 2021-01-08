@@ -1,11 +1,11 @@
 # elm-review-no-ignoring-errors
 
-Provides [`elm-review`](https://package.elm-lang.org/packages/jfmengels/elm-review/latest/) rules to REPLACEME.
+Provides [`elm-review`](https://package.elm-lang.org/packages/jfmengels/elm-review/latest/) rules to find ignored error details.
 
 
 ## Provided rules
 
-- [`NoIgnoringErrors`](https://package.elm-lang.org/packages/jfmengels/elm-review-no-ignoring-errors/1.0.0/NoIgnoringErrors) - Reports REPLACEME.
+- [`NoIgnoringErrors`](https://package.elm-lang.org/packages/jfmengels/elm-review-no-ignoring-errors/1.0.0/NoIgnoringErrors) - Reports when error details are not being used.
 
 
 ## Configuration
