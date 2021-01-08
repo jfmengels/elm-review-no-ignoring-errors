@@ -69,7 +69,7 @@ I would recommend at this point to run this rule to find places to improve but n
 You can try this rule out by running the following command:
 
 ```bash
-elm-review --template jfmengels/elm-review-no-ignoring-errors/example --rules NoIgnoringErrors
+elm-review --template jfmengels/elm-review-no-ignoring-errors/preview --rules NoIgnoringErrors
 ```
 
 -}
