@@ -34,6 +34,27 @@ a =
                             , under = "Err _"
                             }
                         ]
+        , test "should not report an error when re-defining Err" <|
+            \() ->
+                """module A exposing (..)
+type Thing = Err ()
+a =
+  case foo of
+      Ok () -> 1
+      Err _ -> 1
+"""
+                    |> Review.Test.run rule
+                    |> Review.Test.expectNoErrors
+        , test "should not report an error when using an Err not from Result" <|
+            \() ->
+                """module A exposing (..)
+a =
+  case foo of
+      Thing.Ok () -> 1
+      Thing.Err _ -> 1
+"""
+                    |> Review.Test.run rule
+                    |> Review.Test.expectNoErrors
         , test "should not report an error when the argument to Err is used" <|
             \() ->
                 """module A exposing (..)
@@ -44,6 +65,22 @@ a =
 """
                     |> Review.Test.run rule
                     |> Review.Test.expectNoErrors
+        , test "should report an error when Err is used with a qualified import" <|
+            \() ->
+                """module A exposing (..)
+a =
+  case foo of
+      Result.Ok _ -> 1
+      Result.Err _ -> 1
+"""
+                    |> Review.Test.run rule
+                    |> Review.Test.expectErrors
+                        [ Review.Test.error
+                            { message = message
+                            , details = details
+                            , under = "Result.Err _"
+                            }
+                        ]
         , test "should report an error when the wildcard with error is in a parens" <|
             \() ->
                 """module A exposing (..)
