@@ -7,7 +7,6 @@ module NoIgnoringErrors exposing (rule)
 -}
 
 import Elm.Syntax.Expression as Expression exposing (Expression)
-import Elm.Syntax.ModuleName exposing (ModuleName)
 import Elm.Syntax.Node as Node exposing (Node)
 import Elm.Syntax.Pattern as Pattern
 import Review.ModuleNameLookupTable as ModuleNameLookupTable exposing (ModuleNameLookupTable)
