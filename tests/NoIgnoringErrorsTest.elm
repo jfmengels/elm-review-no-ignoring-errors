@@ -1,6 +1,8 @@
 module NoIgnoringErrorsTest exposing (all)
 
+import Dependencies.ElmCore
 import NoIgnoringErrors exposing (rule)
+import Review.Project as Project exposing (Project)
 import Review.Test
 import Test exposing (Test, describe, test)
 
@@ -15,6 +17,12 @@ details =
     [ "Please check whether the error can't be used to improve the situation for the user. You can for instance display the error message to the user or re-attempt the operation." ]
 
 
+project : Project
+project =
+    Project.new
+        |> Project.addDependency Dependencies.ElmCore.dependency
+
+
 all : Test
 all =
     describe "NoIgnoringErrors"
@@ -26,7 +34,7 @@ a =
       Ok () -> 1
       Err _ -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -43,7 +51,7 @@ a =
       Ok () -> 1
       Err _ -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectNoErrors
         , test "should not report an error when using an Err not from Result" <|
             \() ->
@@ -53,7 +61,7 @@ a =
       Thing.Ok () -> 1
       Thing.Err _ -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectNoErrors
         , test "should not report an error when the argument to Err is used" <|
             \() ->
@@ -63,7 +71,7 @@ a =
       Ok () -> 1
       Err () -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectNoErrors
         , test "should report an error when Err is used with a qualified import" <|
             \() ->
@@ -73,7 +81,7 @@ a =
       Result.Ok _ -> 1
       Result.Err _ -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -89,7 +97,7 @@ a =
       (Ok ()) -> 1
       (Err _) -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -106,7 +114,7 @@ a =
       Just (Err _) -> 1
       Nothing -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -121,7 +129,7 @@ a =
   case foo of
       Err _ :: list -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -136,7 +144,7 @@ a =
   case foo of
       [Err _] -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -151,7 +159,7 @@ a =
   case foo of
       (_, Err _) -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
@@ -166,7 +174,7 @@ a =
   case foo of
       ((Err _) as error) -> 1
 """
-                    |> Review.Test.run rule
+                    |> Review.Test.runWithProjectData project rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = message
