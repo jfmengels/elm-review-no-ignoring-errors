@@ -10,8 +10,8 @@ import Elm.Syntax.Expression as Expression exposing (Expression)
 import Elm.Syntax.ModuleName exposing (ModuleName)
 import Elm.Syntax.Node as Node exposing (Node)
 import Elm.Syntax.Pattern as Pattern
-import Review.ModuleNameLookupTable exposing (ModuleNameLookupTable)
-import Review.Rule as Rule exposing (ContextCreator, Error, Rule)
+import Review.ModuleNameLookupTable as ModuleNameLookupTable exposing (ModuleNameLookupTable)
+import Review.Rule as Rule exposing (Error, Rule)
 
 
 {-| Reports when error details are not being used.
@@ -96,7 +96,7 @@ expressionVisitor : Node Expression -> Context -> ( List (Error {}), Context )
 expressionVisitor node context =
     case Node.value node of
         Expression.CaseExpression { cases } ->
-            ( List.concatMap (\( pattern, _ ) -> patternProblems pattern) cases
+            ( List.concatMap (\( pattern, _ ) -> patternProblems context.lookupTable pattern) cases
             , context
             )
 
@@ -104,35 +104,40 @@ expressionVisitor node context =
             ( [], context )
 
 
-patternProblems : Node Pattern.Pattern -> List (Error {})
-patternProblems node =
+patternProblems : ModuleNameLookupTable -> Node Pattern.Pattern -> List (Error {})
+patternProblems lookupTable node =
     case Node.value node of
-        Pattern.NamedPattern { moduleName, name } patterns ->
+        Pattern.NamedPattern { name } patterns ->
             if name == "Err" && List.map Node.value patterns == [ Pattern.AllPattern ] then
-                Rule.error
-                    { message = "The error is being ignored."
-                    , details = [ "Please check whether the error can't be used to improve the situation for the user. You can for instance display the error message to the user or re-attempt the operation." ]
-                    }
-                    (Node.range node)
-                    :: List.concatMap patternProblems patterns
+                case ModuleNameLookupTable.moduleNameFor lookupTable node of
+                    Just [ "Result" ] ->
+                        [ Rule.error
+                            { message = "The error is being ignored."
+                            , details = [ "Please check whether the error can't be used to improve the situation for the user. You can for instance display the error message to the user or re-attempt the operation." ]
+                            }
+                            (Node.range node)
+                        ]
+
+                    _ ->
+                        List.concatMap (patternProblems lookupTable) patterns
 
             else
-                List.concatMap patternProblems patterns
+                List.concatMap (patternProblems lookupTable) patterns
 
         Pattern.ParenthesizedPattern pattern ->
-            patternProblems pattern
+            patternProblems lookupTable pattern
 
         Pattern.UnConsPattern left right ->
-            patternProblems left ++ patternProblems right
+            patternProblems lookupTable left ++ patternProblems lookupTable right
 
         Pattern.ListPattern patterns ->
-            List.concatMap patternProblems patterns
+            List.concatMap (patternProblems lookupTable) patterns
 
         Pattern.TuplePattern patterns ->
-            List.concatMap patternProblems patterns
+            List.concatMap (patternProblems lookupTable) patterns
 
         Pattern.AsPattern pattern _ ->
-            patternProblems pattern
+            patternProblems lookupTable pattern
 
         _ ->
             []
