@@ -54,13 +54,45 @@ to help get you to the state where the noise is removed.
                 -- `errorMessage` is not used, but the rule only checks whether a wildcard is being used.
                 "Failure!"
 
+In some cases, you will genuinely only care about whether something has failed or not. In those cases, you can transform the result
+in a way where you explicitly show that you don't care about the error.
+
+    hasFailed =
+        case Result.mapError (\_ -> ()) foo of
+            Ok data -> ...
+            Err () -> ...
+
+To do the above, I recommend using [`Result.mapError`](https://package.elm-lang.org/packages/elm/core/latest/Result#mapError) or [`Result.toMaybe`](https://package.elm-lang.org/packages/elm/core/latest/Result#toMaybe),
+and to use them at the earliest possible convenience, such as when you are creating the `Task`, so that your the associated constructor shows you will ignore the error.
+
+    type Msg
+        = UserClickedOnSend
+        | GotServerResponse (Result () Data)
+
+    update : Msg -> Model -> ( Model, Cmd Msg )
+    update msg model =
+        case msg of
+            UserClickedOnSend ->
+                ( model
+                , Http.get
+                    { url = "https://elm-lang.org/assets/public-opinion.txt"
+                    , expect =
+                        Http.expectString
+                            (Result.mapError (\_ -> ()) >> GotServerResponse)
+                    }
+                )
+
+            GotServerResponse (Ok data) ->
+                ( { model | data = data }, Cmd.none )
+
+            GotServerResponse (Err ()) ->
+                ( { model | errorWasReceived = True }, Cmd.none )
+
 
 ## When (not) to enable this rule
 
 This rule is still experimental. I am trying to figure out if this error is always useful or how to tweak it to remove
 false positives and discover more cases where errors are ignored.
-
-I would recommend at this point to run this rule to find places to improve but not to add it to your configuration.
 
 
 ## Try it out
